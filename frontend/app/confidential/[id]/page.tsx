@@ -4,7 +4,6 @@ import { use, useEffect, useState } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import Link from 'next/link'
 import { useAccount } from 'wagmi'
-import { formatUnits } from 'viem'
 import Toast from '@/components/Toast'
 import ConfirmModal from '@/components/ConfirmModal'
 import { CONTRACTS } from '@/lib/contracts'
@@ -59,7 +58,6 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
   const [isDecryptingAmount, setIsDecryptingAmount] = useState(false)
 
-  // Load invoice data
   const loadInvoice = async () => {
     setIsLoadingInvoice(true)
     try {
@@ -82,10 +80,12 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
 
   if (fhevmLoading || isLoadingInvoice) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-xl">🔐 Loading confidential invoice...</p>
-          {fhevmLoading && <p className="text-gray-400 mt-2">Initializing encryption...</p>}
+          <p className="text-[var(--accent-primary)] text-xs uppercase tracking-wider mb-2">// Loading</p>
+          <p className="text-[var(--text-secondary)]">
+            {fhevmLoading ? 'Initializing encryption...' : 'Loading confidential invoice...'}
+          </p>
         </div>
       </div>
     )
@@ -93,11 +93,11 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
 
   if (!invoice) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-xl">Invoice not found</p>
-          <Link href="/" className="text-purple-400 hover:underline mt-4 inline-block">
-            ← Back to Dashboard
+          <p className="text-[var(--text-secondary)] mb-4">Invoice not found</p>
+          <Link href="/" className="text-[var(--accent-primary)] hover:underline text-sm">
+            {'\u2190'} Back to Dashboard
           </Link>
         </div>
       </div>
@@ -108,7 +108,6 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
   const isProvider = address?.toLowerCase() === invoice.provider.toLowerCase()
   const isArbiter = address?.toLowerCase() === invoice.arbiter.toLowerCase()
 
-  // Status checks
   const isFunded = invoice.status === ConfidentialInvoiceStatus.FUNDED
   const isApproved = invoice.status === ConfidentialInvoiceStatus.APPROVED
   const isDisputed = invoice.status === ConfidentialInvoiceStatus.DISPUTED
@@ -116,10 +115,7 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
   const isRefunded = invoice.status === ConfidentialInvoiceStatus.REFUNDED
   const canTakeAction = isFunded || isApproved
 
-  // Action permissions - check who has already approved
-  // Flow: payer (client) created invoice, provider (payee) requests payment first, then payer releases or disputes
   const providerCanApprove = isProvider && canTakeAction && !invoice.providerApproved
-  // Payer can only approve AFTER payee has requested payment (providerApproved = true)
   const clientCanApprove = isClient && canTakeAction && !invoice.clientApproved && invoice.providerApproved
   const clientCanDispute = isClient && (isFunded || isApproved)
   const arbiterCanResolve = isArbiter && isDisputed
@@ -127,7 +123,7 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
   const handleApproveRelease = () => {
     setConfirmAction({
       title: 'Approve Release',
-      message: `Approve release of funds?\n\nAmount: ${invoice.decryptedAmount || '🔐 Encrypted'}\n\nWhen both parties approve, funds will be released to the provider.`,
+      message: `Approve release of funds?\n\nAmount: ${invoice.decryptedAmount || 'Encrypted'}\n\nWhen both parties approve, funds will be released to the provider.`,
       type: 'warning',
       confirmText: 'Approve',
       onConfirm: async () => {
@@ -208,74 +204,83 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
     })
   }
 
-  const statusColor = isCompleted
-    ? 'bg-green-500/20 text-green-400'
-    : isRefunded
-    ? 'bg-red-500/20 text-red-400'
-    : isDisputed
-    ? 'bg-yellow-500/20 text-yellow-400'
-    : isFunded
-    ? 'bg-blue-500/20 text-blue-400'
-    : 'bg-gray-500/20 text-gray-400'
+  const statusConfig: Record<number, { label: string; class: string }> = {
+    0: { label: 'CREATED', class: 'badge-neutral' },
+    1: { label: 'FUNDED', class: 'badge-info' },
+    2: { label: 'APPROVED', class: 'badge-info' },
+    3: { label: 'COMPLETED', class: 'badge-success' },
+    4: { label: 'REFUNDED', class: 'badge-warning' },
+    5: { label: 'DISPUTED', class: 'badge-error' },
+  }
+
+  const status = statusConfig[invoice.status] || statusConfig[0]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                <span className="text-white font-bold text-xl">🔐</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">FHEscrow</h1>
-                <p className="text-xs text-gray-400">Confidential Invoice #{invoice.id.toString()}</p>
-              </div>
-            </Link>
+            <div className="flex items-center gap-8">
+              <Link href="/" className="flex items-center gap-3">
+                <div className="w-8 h-8 border border-[var(--accent-primary)] flex items-center justify-center">
+                  <span className="text-[var(--accent-primary)] text-xs font-bold">FH</span>
+                </div>
+                <div className="hidden sm:block">
+                  <span className="text-sm font-medium tracking-wide">FHESCROW</span>
+                  <span className="text-[var(--accent-primary)] text-xs ml-2">// CONFIDENTIAL</span>
+                </div>
+              </Link>
+            </div>
+            
             <ConnectButton />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <Link href="/" className="text-purple-400 hover:underline mb-4 inline-block">
-          ← Back to Dashboard
+      <main className="max-w-4xl mx-auto px-6 py-12">
+        <Link href="/" className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--accent-primary)] text-xs uppercase tracking-wider mb-8 transition-colors">
+          {'\u2190'} Back to Dashboard
         </Link>
 
+        {/* Header */}
         <div className="flex items-start justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-white mb-2">
-              Confidential Invoice #{invoice.id.toString()}
-            </h2>
-            <p className="text-gray-400">Privacy-preserved escrow payment</p>
+            <p className="text-[var(--accent-primary)] text-xs uppercase tracking-wider mb-2">
+              // Confidential Invoice #{invoice.id.toString()}
+            </p>
+            <h1 className="headline text-4xl text-[var(--text-primary)]">
+              Privacy-preserved escrow
+            </h1>
           </div>
-          <span className={`rounded-full px-4 py-2 text-sm font-semibold ${statusColor}`}>
-            {getStatusLabel(invoice.status as 0 | 1 | 2 | 3 | 4 | 5 | 6)}
-          </span>
+          <span className={`badge ${status.class}`}>{status.label}</span>
         </div>
 
         {/* Amount Card - Encrypted */}
-        <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-2xl p-8 mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">🔐</span>
-            <p className="text-sm text-gray-400">Encrypted Amount</p>
+        <div className="card-accent p-8 mb-8 glow-accent animate-pulse-glow">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 border border-[var(--accent-primary)] flex items-center justify-center">
+              <span className="text-[var(--accent-primary)] text-xs">FH</span>
+            </div>
+            <p className="text-[var(--accent-primary)] text-xs uppercase tracking-wider">
+              // Encrypted Amount
+            </p>
           </div>
           
           {isDecrypting ? (
-            <p className="text-3xl font-bold text-white">Decrypting...</p>
+            <p className="headline text-3xl text-[var(--text-secondary)]">Decrypting...</p>
           ) : invoice.decryptedAmount ? (
             <>
-              <p className="text-5xl font-bold text-white mb-2">
-                {invoice.decryptedAmount} cUSDC
+              <p className="headline text-5xl text-[var(--text-primary)] mb-2">
+                {invoice.decryptedAmount} <span className="text-[var(--accent-primary)]">cUSDC</span>
               </p>
-              <p className="text-sm text-green-400">✓ Decrypted successfully</p>
+              <p className="text-xs text-[var(--accent-primary)]">{'\u2713'} Decrypted successfully</p>
             </>
           ) : (
             <>
-              <p className="text-3xl font-bold text-gray-400 font-mono">
-                ██████████
+              <p className="text-3xl font-mono text-[var(--text-muted)] tracking-widest mb-4">
+                ████████████
               </p>
               {(isClient || isProvider || isArbiter) && (
                 <button
@@ -302,88 +307,92 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
                     }
                   }}
                   disabled={isDecryptingAmount}
-                  className="mt-3 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg border border-purple-500/50 text-sm font-medium transition-all disabled:opacity-50"
+                  className="btn-secondary"
                 >
-                  {isDecryptingAmount ? '⏳ Decrypting...' : '🔓 Decrypt Amount'}
+                  {isDecryptingAmount ? 'Decrypting...' : <>Decrypt Amount <span>{'\u00BB'}</span></>}
                 </button>
               )}
               {!(isClient || isProvider || isArbiter) && (
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-xs text-[var(--text-muted)]">
                   Only parties can decrypt
                 </p>
               )}
             </>
           )}
 
-          <div className="mt-4 pt-4 border-t border-gray-700/50">
-            <p className="text-xs text-gray-500">
+          <div className="mt-6 pt-6 border-t border-[var(--accent-border)]">
+            <p className="text-xs text-[var(--text-muted)]">
               Created: {new Date(Number(invoice.createdAt) * 1000).toLocaleDateString()}
             </p>
           </div>
         </div>
 
         {/* Participants */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-8">
-          <h3 className="text-xl font-bold text-white mb-4">Participants</h3>
+        <div className="card-bracketed p-6 mb-8">
+          <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-6">
+            // Participants
+          </p>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] border border-white/5">
               <div>
-                <p className="text-sm text-gray-400">Client (Payer) {isClient && '(You)'}</p>
-                <p className="font-mono text-white text-sm">{invoice.client}</p>
+                <p className="text-xs text-[var(--text-muted)] mb-1">// CLIENT (PAYER) {isClient && '(You)'}</p>
+                <p className="font-mono text-sm text-[var(--text-primary)]">{invoice.client}</p>
               </div>
               {invoice.clientApproved && (
-                <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">✓ Approved</span>
+                <span className="badge badge-success">{'\u2713'} Approved</span>
               )}
             </div>
-            <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] border border-white/5">
               <div>
-                <p className="text-sm text-gray-400">Provider (Payee) {isProvider && '(You)'}</p>
-                <p className="font-mono text-white text-sm">{invoice.provider}</p>
+                <p className="text-xs text-[var(--text-muted)] mb-1">// PROVIDER (PAYEE) {isProvider && '(You)'}</p>
+                <p className="font-mono text-sm text-[var(--text-primary)]">{invoice.provider}</p>
               </div>
               {invoice.providerApproved && (
-                <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">✓ Approved</span>
+                <span className="badge badge-success">{'\u2713'} Approved</span>
               )}
             </div>
-            <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] border border-white/5">
               <div>
-                <p className="text-sm text-gray-400">Arbiter {isArbiter && '(You)'}</p>
-                <p className="font-mono text-white text-sm">{invoice.arbiter}</p>
+                <p className="text-xs text-[var(--text-muted)] mb-1">// ARBITER {isArbiter && '(You)'}</p>
+                <p className="font-mono text-sm text-[var(--text-primary)]">{invoice.arbiter}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-8">
-          <h3 className="text-xl font-bold text-white mb-4">Actions</h3>
+        <div className="card-bracketed p-6 mb-8">
+          <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-6">
+            // Actions
+          </p>
           
           {!isConnected ? (
-            <p className="text-gray-400">Connect your wallet to take actions</p>
+            <p className="text-[var(--text-secondary)]">Connect your wallet to take actions</p>
           ) : !isClient && !isProvider && !isArbiter ? (
-            <p className="text-gray-400">You are not a party to this invoice</p>
+            <p className="text-[var(--text-secondary)]">You are not a party to this invoice</p>
           ) : isCompleted || isRefunded ? (
-            <p className="text-gray-400">This invoice has been {isCompleted ? 'completed' : 'refunded'}.</p>
+            <p className="text-[var(--text-secondary)]">This invoice has been {isCompleted ? 'completed' : 'refunded'}.</p>
           ) : (
             <div className="space-y-4">
-              {/* Provider (payee) actions: request payment by approving first */}
+              {/* Provider actions */}
               {providerCanApprove && (
                 <button
                   onClick={handleApproveRelease}
                   disabled={isApproving}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50 transition-all"
+                  className="btn-primary w-full justify-center"
                 >
-                  {isApproving ? '⏳ Processing...' : '📝 Confirm Work Complete & Request Payment'}
+                  {isApproving ? 'Processing...' : <>Confirm Work Complete & Request Payment <span>{'\u00BB'}</span></>}
                 </button>
               )}
 
-              {/* Payer (client) actions: approve to release or dispute */}
+              {/* Client actions */}
               {clientCanApprove && (
                 <button
                   onClick={handleApproveRelease}
                   disabled={isApproving}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50 transition-all"
+                  className="btn-primary w-full justify-center"
                 >
-                  {isApproving ? '⏳ Processing...' : '✓ Approve & Release Funds'}
+                  {isApproving ? 'Processing...' : <>Approve & Release Funds <span>{'\u00BB'}</span></>}
                 </button>
               )}
 
@@ -391,9 +400,9 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
                 <button
                   onClick={handleDispute}
                   disabled={isDisputing}
-                  className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold py-3 px-6 rounded-lg border border-red-500/50 disabled:opacity-50 transition-all"
+                  className="btn-danger w-full justify-center"
                 >
-                  {isDisputing ? '⏳ Processing...' : '⚠️ Raise Dispute'}
+                  {isDisputing ? 'Processing...' : <>Raise Dispute <span>{'\u00BB'}</span></>}
                 </button>
               )}
 
@@ -403,58 +412,57 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
                   <button
                     onClick={handleResolveToProvider}
                     disabled={isResolving}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50 transition-all"
+                    className="btn-primary w-full justify-center"
                   >
-                    {isResolving ? '⏳ Processing...' : 'Release to Provider'}
+                    {isResolving ? 'Processing...' : <>Release to Provider <span>{'\u00BB'}</span></>}
                   </button>
                   <button
                     onClick={handleResolveToClient}
                     disabled={isResolving}
-                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg disabled:opacity-50 transition-all"
+                    className="btn-secondary w-full justify-center"
                   >
-                    {isResolving ? '⏳ Processing...' : 'Refund to Client'}
+                    {isResolving ? 'Processing...' : <>Refund to Client <span>{'\u00BB'}</span></>}
                   </button>
                 </>
               )}
 
               {/* Status messages */}
               {isApproved && isClient && (
-                <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                  <p className="text-blue-300">
-                    ✓ Provider requested payment. Review and either release funds or raise a dispute.
+                <div className="p-4 bg-[rgba(76,168,229,0.1)] border border-[var(--status-info)]/30">
+                  <p className="text-xs text-[var(--status-info)]">
+                    Provider requested payment. Review and either release funds or raise a dispute.
                   </p>
                 </div>
               )}
 
               {isApproved && isProvider && (
-                <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                  <p className="text-blue-300">
-                    ⏳ Payment requested. Waiting for payer decision (release or dispute).
+                <div className="p-4 bg-[rgba(76,168,229,0.1)] border border-[var(--status-info)]/30">
+                  <p className="text-xs text-[var(--status-info)]">
+                    Payment requested. Waiting for payer decision (release or dispute).
                   </p>
                 </div>
               )}
 
               {isFunded && isClient && (
-                <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-4">
-                  <p className="text-gray-300">
-                    💼 Invoice funded. Waiting for provider to confirm work and request payment.
+                <div className="p-4 bg-[var(--bg-secondary)] border border-white/5">
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    Invoice funded. Waiting for provider to confirm work and request payment.
                   </p>
                 </div>
               )}
 
               {isFunded && isProvider && (
-                <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-4">
-                  <p className="text-gray-300">
-                    📋 Invoice funded. Complete work, then click "Confirm Work Complete" to request payment.
+                <div className="p-4 bg-[var(--bg-secondary)] border border-white/5">
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    Invoice funded. Complete work, then click &quot;Confirm Work Complete&quot; to request payment.
                   </p>
                 </div>
               )}
 
-              {/* Dispute waiting message */}
               {isDisputed && !isArbiter && (
-                <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
-                  <p className="text-yellow-300">
-                    ⚠️ This invoice is under dispute. Waiting for arbiter decision.
+                <div className="p-4 bg-[rgba(229,184,76,0.1)] border border-[var(--status-warning)]/30">
+                  <p className="text-xs text-[var(--status-warning)]">
+                    This invoice is under dispute. Waiting for arbiter decision.
                   </p>
                 </div>
               )}
@@ -463,8 +471,9 @@ export default function ConfidentialInvoicePage({ params }: { params: Promise<{ 
         </div>
 
         {/* Contract Info */}
-        <div className="bg-gray-800/30 rounded-lg border border-gray-700/50 p-4">
-          <p className="text-xs text-gray-500">
+        <div className="p-4 bg-[var(--bg-secondary)] border border-white/5">
+          <p className="text-xs text-[var(--text-muted)]">
+            <span className="text-[var(--text-muted)]">// </span>
             Contract: <span className="font-mono">{CONTRACTS.CONFIDENTIAL_ESCROW}</span>
           </p>
         </div>

@@ -11,22 +11,15 @@ export default function WrapPage() {
   const { isConnected } = useAccount()
   const { isReady: fhevmReady, error: fhevmError, isLoading: fhevmLoading } = useFhevm()
   const {
-    // Balances
     formattedErc20Balance,
     formattedDecryptedBalance,
     hasConfidentialBalance,
-    
-    // Operator
     isOperatorValid,
-    
-    // Actions
     wrap,
     unwrap,
     decryptBalance,
     setGatewayAsOperator,
     refetch,
-    
-    // Loading states
     isLoading,
     isWrapping,
     isUnwrapping,
@@ -70,7 +63,7 @@ export default function WrapPage() {
       return
     }
 
-    setToast({ message: 'Wrapping USDC → cUSDC...', type: 'info' })
+    setToast({ message: 'Wrapping USDC to cUSDC...', type: 'info' })
     
     try {
       const hash = await wrap(amount)
@@ -98,7 +91,7 @@ export default function WrapPage() {
       return
     }
 
-    setToast({ message: 'Unwrapping cUSDC → USDC (requires signature)...', type: 'info' })
+    setToast({ message: 'Unwrapping cUSDC to USDC (requires signature)...', type: 'info' })
     
     try {
       const hash = await unwrap(amount)
@@ -149,84 +142,86 @@ export default function WrapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <span className="text-white font-bold text-xl">A</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">FHEscrow</h1>
-                <p className="text-xs text-gray-400">Token Wrapper</p>
-              </div>
-            </Link>
-            <div className="flex items-center gap-4">
-              <a
-                href="https://faucet.circle.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-500/50 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 transition-all text-sm font-medium"
-              >
-                <span>Get USDC</span>
-              </a>
-              <ConnectButton />
+            <div className="flex items-center gap-8">
+              <Link href="/" className="flex items-center gap-3">
+                <div className="w-8 h-8 border border-[var(--accent-primary)] flex items-center justify-center">
+                  <span className="text-[var(--accent-primary)] text-xs font-bold">FH</span>
+                </div>
+                <div className="hidden sm:block">
+                  <span className="text-sm font-medium tracking-wide">FHESCROW</span>
+                  <span className="text-[var(--text-muted)] text-xs ml-2">// WRAP</span>
+                </div>
+              </Link>
+              
+              <nav className="hidden md:flex items-center gap-6">
+                <Link href="/" className="nav-link text-xs uppercase tracking-wider">Dashboard</Link>
+                <span className="text-[var(--text-muted)]">|</span>
+                <span className="text-xs uppercase tracking-wider text-[var(--text-primary)]">Wrap</span>
+                <span className="text-[var(--text-muted)]">|</span>
+                <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer" className="nav-link text-xs uppercase tracking-wider">
+                  Get USDC
+                </a>
+              </nav>
             </div>
+            
+            <ConnectButton />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-xl">
-        <div className="mb-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-2">Token Wrapper</h2>
-          <p className="text-gray-400">Convert between USDC and Confidential USDC (cUSDC)</p>
+      <main className="max-w-xl mx-auto px-6 py-12">
+        <div className="text-center mb-12">
+          <p className="text-[var(--accent-primary)] text-xs uppercase tracking-wider mb-2">
+            // Token Wrapper
+          </p>
+          <h1 className="headline text-4xl text-[var(--text-primary)] mb-2">
+            USDC {'\u2194'} cUSDC
+          </h1>
+          <p className="text-[var(--text-secondary)]">
+            Convert between USDC and Confidential USDC
+          </p>
         </div>
 
         {/* FHEVM Status */}
-        <div className="flex items-center gap-2 mb-6 text-sm">
-          <span className={`w-2 h-2 rounded-full ${fhevmLoading ? 'bg-yellow-400 animate-pulse' : fhevmError ? 'bg-red-400' : fhevmReady ? 'bg-green-400' : 'bg-gray-400'}`}></span>
-          <span className="text-gray-400">
-            {fhevmLoading ? 'Initializing encryption...' : fhevmError ? 'Encryption error' : fhevmReady ? 'Encryption ready' : 'Encryption not ready'}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <span className={`w-2 h-2 ${fhevmLoading ? 'bg-[var(--status-warning)] animate-pulse' : fhevmError ? 'bg-[var(--status-error)]' : fhevmReady ? 'bg-[var(--accent-primary)]' : 'bg-[var(--text-muted)]'}`}></span>
+          <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">
+            {fhevmLoading ? 'Initializing...' : fhevmError ? 'Error' : fhevmReady ? 'Ready' : 'Not ready'}
           </span>
         </div>
 
         {/* Balance Cards */}
         {isConnected && (
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {/* USDC Balance */}
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-1">USDC Balance</p>
-              <p className="text-2xl font-bold text-white">
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="card-bracketed p-5">
+              <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-2">// USDC</p>
+              <p className="headline text-2xl text-[var(--text-primary)]">
                 {isLoading ? '...' : parseFloat(formattedErc20Balance).toFixed(2)}
               </p>
             </div>
             
-            {/* cUSDC Balance with Reveal Button */}
-            <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-1">cUSDC Balance</p>
+            <div className="card-accent p-5">
+              <p className="text-[var(--accent-primary)] text-xs uppercase tracking-wider mb-2">// cUSDC</p>
               {formattedDecryptedBalance !== null ? (
-                <p className="text-2xl font-bold text-white">
+                <p className="headline text-2xl text-[var(--text-primary)]">
                   {parseFloat(formattedDecryptedBalance).toFixed(2)}
                 </p>
               ) : hasConfidentialBalance ? (
                 <button
                   onClick={handleRevealBalance}
                   disabled={isDecrypting || !fhevmReady}
-                  className="text-lg font-bold text-purple-400 hover:text-purple-300 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  className="text-lg font-mono text-[var(--accent-primary)] hover:underline disabled:opacity-50"
                 >
-                  {isDecrypting ? (
-                    '🔐 Revealing...'
-                  ) : (
-                    <>
-                      🔐 <span className="underline">Click to reveal</span>
-                    </>
-                  )}
+                  {isDecrypting ? 'Revealing...' : 'Click to reveal'}
                 </button>
               ) : (
-                <p className="text-2xl font-bold text-white">0.00</p>
+                <p className="headline text-2xl text-[var(--text-primary)]">0.00</p>
               )}
             </div>
           </div>
@@ -234,56 +229,58 @@ export default function WrapPage() {
 
         {/* Operator Status */}
         {isConnected && !isOperatorValid && (
-          <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-4 mb-6">
-            <p className="text-orange-400 text-sm">
-              ⚠️ Gateway not authorized. Set operator before decrypting balances.
+          <div className="p-4 bg-[rgba(229,184,76,0.1)] border border-[var(--status-warning)]/30 mb-8">
+            <p className="text-xs text-[var(--status-warning)]">
+              Gateway not authorized. Set operator before decrypting balances.
             </p>
           </div>
         )}
 
         {/* Mode Toggle */}
-        <div className="flex mb-6 bg-gray-800/50 rounded-lg p-1">
+        <div className="flex mb-8 border border-white/10">
           <button
             onClick={() => setMode('wrap')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+            className={`flex-1 py-4 px-6 text-xs uppercase tracking-wider transition-all ${
               mode === 'wrap'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-[var(--accent-primary)] text-[var(--bg-primary)] font-semibold'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
-            Wrap (USDC → cUSDC)
+            Wrap {'\u00BB'} USDC to cUSDC
           </button>
           <button
             onClick={() => setMode('unwrap')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+            className={`flex-1 py-4 px-6 text-xs uppercase tracking-wider transition-all ${
               mode === 'unwrap'
-                ? 'bg-purple-500 text-white'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-[var(--accent-primary)] text-[var(--bg-primary)] font-semibold'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
-            Unwrap (cUSDC → USDC)
+            Unwrap {'\u00BB'} cUSDC to USDC
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-gray-800/50 rounded-lg border border-gray-700 p-6 space-y-6">
-          <div className={`p-4 rounded-lg ${mode === 'wrap' ? 'bg-blue-900/20 border border-blue-500/30' : 'bg-purple-900/20 border border-purple-500/30'}`}>
-            <p className="text-sm">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className={`p-4 ${mode === 'wrap' ? 'card-bracketed' : 'card-accent'}`}>
+            <p className="text-xs">
               {mode === 'wrap' ? (
-                <span className="text-blue-300">
-                  🔒 <strong>Wrap</strong> your USDC to confidential cUSDC for private transactions.
+                <span className="text-[var(--text-secondary)]">
+                  <span className="text-[var(--text-muted)]">// </span>
+                  Wrap your USDC to confidential cUSDC for private transactions.
                 </span>
               ) : (
-                <span className="text-purple-300">
-                  🔓 <strong>Unwrap</strong> your cUSDC back to plain USDC. Requires encryption signature.
+                <span className="text-[var(--accent-primary)]">
+                  <span className="text-[var(--text-muted)]">// </span>
+                  Unwrap your cUSDC back to plain USDC. Requires encryption signature.
                 </span>
               )}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Amount
+            <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              // Amount
             </label>
             <div className="relative">
               <input
@@ -293,19 +290,19 @@ export default function WrapPage() {
                 placeholder="0.00"
                 step="0.01"
                 min="0"
-                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 pr-24 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                className="input-field pr-20"
                 required
               />
               <button
                 type="button"
                 onClick={setMaxAmount}
                 disabled={mode === 'unwrap' && formattedDecryptedBalance === null}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-gray-700 text-gray-300 text-sm rounded hover:bg-gray-600 transition-colors disabled:opacity-50"
+                className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--accent-primary)] uppercase tracking-wider transition-colors disabled:opacity-50"
               >
-                MAX
+                Max
               </button>
             </div>
-            <p className="mt-2 text-sm text-gray-400">
+            <p className="mt-2 text-xs text-[var(--text-muted)]">
               {mode === 'wrap' 
                 ? `Available: ${parseFloat(formattedErc20Balance).toFixed(2)} USDC`
                 : formattedDecryptedBalance !== null 
@@ -315,25 +312,25 @@ export default function WrapPage() {
             </p>
           </div>
 
-          {/* Arrow Icon */}
-          <div className="flex justify-center">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${mode === 'wrap' ? 'bg-blue-500/20' : 'bg-purple-500/20'}`}>
-              <span className="text-2xl">↓</span>
+          {/* Arrow */}
+          <div className="flex justify-center py-2">
+            <div className="w-10 h-10 border border-white/10 flex items-center justify-center">
+              <span className="text-[var(--text-muted)]">{'\u2193'}</span>
             </div>
           </div>
 
-          <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
-            <p className="text-sm text-gray-400 mb-1">You will receive</p>
-            <p className="text-2xl font-bold text-white">
-              {amount || '0'} {mode === 'wrap' ? 'cUSDC' : 'USDC'}
+          <div className="card-bracketed p-5">
+            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2">// You Will Receive</p>
+            <p className="headline text-3xl text-[var(--text-primary)]">
+              {amount || '0'} <span className="text-[var(--accent-primary)]">{mode === 'wrap' ? 'cUSDC' : 'USDC'}</span>
             </p>
           </div>
 
           {/* Status Messages */}
           {(isWrapping || isUnwrapping) && (
-            <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
-              <p className="text-yellow-400">
-                ⏳ {mode === 'wrap' ? 'Wrapping' : 'Unwrapping'}...
+            <div className="card-accent p-4">
+              <p className="text-xs text-[var(--status-info)]">
+                {mode === 'wrap' ? 'Wrapping...' : 'Unwrapping...'}
               </p>
             </div>
           )}
@@ -342,56 +339,56 @@ export default function WrapPage() {
           <button
             type="submit"
             disabled={!isConnected || isWrapping || isUnwrapping || !amount || (mode === 'unwrap' && !fhevmReady)}
-            className={`w-full font-bold py-3 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-              mode === 'wrap'
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
-                : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white'
-            }`}
+            className="btn-primary w-full justify-center"
           >
             {!isConnected
               ? 'Connect Wallet'
               : isWrapping
-              ? '⏳ Wrapping...'
+              ? 'Wrapping...'
               : isUnwrapping
-              ? '⏳ Unwrapping...'
+              ? 'Unwrapping...'
               : mode === 'unwrap' && !fhevmReady
-              ? '⏳ Waiting for FHEVM...'
+              ? 'Waiting for FHEVM...'
               : mode === 'wrap'
-              ? 'Wrap USDC → cUSDC'
-              : 'Unwrap cUSDC → USDC'}
+              ? <>Wrap USDC to cUSDC <span>{'\u00BB'}</span></>
+              : <>Unwrap cUSDC to USDC <span>{'\u00BB'}</span></>}
           </button>
         </form>
 
         {/* Gateway Operator Section */}
-        <div className="mt-6 bg-gray-800/30 rounded-lg border border-gray-700/50 p-4">
-          <h4 className="font-bold text-white mb-2">🔑 Gateway Setup (One-time)</h4>
-          <p className="text-sm text-gray-400 mb-4">
+        <div className="mt-8 card-bracketed p-6">
+          <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-4">
+            // Gateway Setup (One-time)
+          </p>
+          <p className="text-sm text-[var(--text-secondary)] mb-4">
             Before revealing your cUSDC balance, you need to authorize the Zama Gateway as an operator for your tokens.
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <button
               onClick={handleSetOperator}
               disabled={!isConnected || isSettingOperator}
-              className="flex-1 bg-gray-700 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="btn-secondary flex-1 justify-center"
             >
-              {isSettingOperator ? '⏳ Setting...' : 'Set Gateway as Operator'}
+              {isSettingOperator ? 'Setting...' : 'Set Gateway as Operator'}
             </button>
             {isOperatorValid && (
-              <span className="text-green-400 text-sm">✓ Active</span>
+              <span className="text-xs text-[var(--accent-primary)]">{'\u2713'} Active</span>
             )}
           </div>
         </div>
 
         {/* Info Box */}
-        <div className="mt-6 bg-gray-800/30 rounded-lg border border-gray-700/50 p-4">
-          <h4 className="font-bold text-white mb-2">What is cUSDC?</h4>
-          <ul className="text-sm text-gray-400 space-y-2">
-            <li>• <strong>cUSDC</strong> is Confidential USDC - an encrypted version of USDC</li>
-            <li>• Your balance and transaction amounts are hidden from public view</li>
-            <li>• Only you can reveal your balance (click the reveal button)</li>
-            <li>• 1:1 backed by USDC - wrap and unwrap anytime</li>
-            <li>• Required for confidential escrow payments</li>
-          </ul>
+        <div className="mt-8 card-bracketed p-6">
+          <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-4">
+            // What is cUSDC?
+          </p>
+          <div className="space-y-3 text-sm text-[var(--text-secondary)]">
+            <p><span className="text-[var(--accent-primary)]">{'\u2022'}</span> cUSDC is Confidential USDC - an encrypted version of USDC</p>
+            <p><span className="text-[var(--accent-primary)]">{'\u2022'}</span> Your balance and transaction amounts are hidden from public view</p>
+            <p><span className="text-[var(--accent-primary)]">{'\u2022'}</span> Only you can reveal your balance (click the reveal button)</p>
+            <p><span className="text-[var(--accent-primary)]">{'\u2022'}</span> 1:1 backed by USDC - wrap and unwrap anytime</p>
+            <p><span className="text-[var(--accent-primary)]">{'\u2022'}</span> Required for confidential escrow payments</p>
+          </div>
         </div>
       </main>
 

@@ -5,7 +5,6 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { parseUnits } from 'viem'
 import Toast from '@/components/Toast'
 import { ARBITER_ADDRESS } from '@/lib/contracts'
 import { useFhevm, useConfidentialToken, useConfidentialEscrow } from '@/lib/fhevm'
@@ -32,7 +31,6 @@ export default function CreateConfidentialInvoice() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning'; txHash?: string } | null>(null)
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null)
 
-  // Check if user has enough cUSDC
   const amountNum = parseFloat(amount) || 0
   const cusdcNum = decryptedBalance !== null ? Number(decryptedBalance) / 1e6 : null
   const hasEnoughBalance = cusdcNum !== null && cusdcNum >= amountNum
@@ -74,13 +72,11 @@ export default function CreateConfidentialInvoice() {
       return
     }
 
-    // Check if balance is revealed
     if (decryptedBalance === null) {
       setToast({ message: 'Please reveal your cUSDC balance first.', type: 'warning' })
       return
     }
 
-    // Check if enough balance
     if (!hasEnoughBalance) {
       setToast({ message: 'Insufficient cUSDC balance. Please wrap more USDC.', type: 'warning' })
       router.push('/wrap')
@@ -94,7 +90,7 @@ export default function CreateConfidentialInvoice() {
         payee as `0x${string}`,
         ARBITER_ADDRESS,
         amount,
-        description || '' // Use description as metadata hash (or empty string)
+        description || ''
       )
 
       if (result) {
@@ -104,7 +100,6 @@ export default function CreateConfidentialInvoice() {
           type: 'success', 
           txHash: result.hash 
         })
-        // Reset form
         setPayee('')
         setAmount('')
         setDescription('')
@@ -125,85 +120,90 @@ export default function CreateConfidentialInvoice() {
   const isProcessing = isCreating || isEncrypting
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                <span className="text-white font-bold text-xl">🔐</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">FHEscrow</h1>
-                <p className="text-xs text-gray-400">Confidential Invoice</p>
-              </div>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/wrap"
-                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-500/50 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 transition-all text-sm font-medium"
-              >
-                <span>Wrap Tokens</span>
+            <div className="flex items-center gap-8">
+              <Link href="/" className="flex items-center gap-3">
+                <div className="w-8 h-8 border border-[var(--accent-primary)] flex items-center justify-center">
+                  <span className="text-[var(--accent-primary)] text-xs font-bold">FH</span>
+                </div>
+                <div className="hidden sm:block">
+                  <span className="text-sm font-medium tracking-wide">FHESCROW</span>
+                  <span className="text-[var(--accent-primary)] text-xs ml-2">// CONFIDENTIAL</span>
+                </div>
               </Link>
-              <ConnectButton />
+              
+              <nav className="hidden md:flex items-center gap-6">
+                <Link href="/" className="nav-link text-xs uppercase tracking-wider">Dashboard</Link>
+                <span className="text-[var(--text-muted)]">|</span>
+                <Link href="/wrap" className="nav-link text-xs uppercase tracking-wider text-[var(--accent-primary)]">Wrap</Link>
+                <span className="text-[var(--text-muted)]">|</span>
+                <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer" className="nav-link text-xs uppercase tracking-wider">
+                  Get USDC
+                </a>
+              </nav>
             </div>
+            
+            <ConnectButton />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
+      <main className="max-w-2xl mx-auto px-6 py-12">
+        <Link href="/" className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--accent-primary)] text-xs uppercase tracking-wider mb-8 transition-colors">
+          {'\u2190'} Back to Dashboard
+        </Link>
+
         <div className="mb-8">
-          <Link href="/" className="text-purple-400 hover:underline mb-4 inline-block">
-            ← Back to Dashboard
-          </Link>
-          <h2 className="text-3xl font-bold text-white mb-2">Create Confidential Invoice</h2>
-          <p className="text-gray-400">Create an escrow with encrypted payment amount - only parties involved can see the amount.</p>
+          <p className="text-[var(--accent-primary)] text-xs uppercase tracking-wider mb-2">
+            // FHE Encrypted
+          </p>
+          <h1 className="headline text-4xl text-[var(--text-primary)] mb-2">
+            Create Confidential Invoice
+          </h1>
+          <p className="text-[var(--text-secondary)]">
+            Create an escrow with encrypted payment amount - only parties involved can see the amount.
+          </p>
         </div>
 
         {/* FHEVM Status */}
-        <div className="flex items-center gap-2 mb-6 text-sm">
-          <span className={`w-2 h-2 rounded-full ${fhevmLoading ? 'bg-yellow-400 animate-pulse' : fhevmError ? 'bg-red-400' : fhevmReady ? 'bg-green-400' : 'bg-gray-400'}`}></span>
-          <span className="text-gray-400">
+        <div className="flex items-center gap-3 mb-6">
+          <span className={`w-2 h-2 ${fhevmLoading ? 'bg-[var(--status-warning)] animate-pulse' : fhevmError ? 'bg-[var(--status-error)]' : fhevmReady ? 'bg-[var(--accent-primary)]' : 'bg-[var(--text-muted)]'}`}></span>
+          <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">
             {fhevmLoading ? 'Initializing encryption...' : fhevmError ? 'Encryption error' : fhevmReady ? 'Encryption ready' : 'Encryption not ready'}
           </span>
         </div>
 
         {/* Balance Cards */}
         {isConnected && (
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {/* USDC Balance */}
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-1">USDC Balance</p>
-              <p className="text-xl font-bold text-white">
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="card-bracketed p-5">
+              <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-2">// USDC</p>
+              <p className="headline text-2xl text-[var(--text-primary)]">
                 {isLoading ? '...' : parseFloat(formattedErc20Balance).toFixed(2)}
               </p>
             </div>
             
-            {/* cUSDC Balance with Reveal Button */}
-            <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-1">cUSDC Balance</p>
+            <div className="card-accent p-5">
+              <p className="text-[var(--accent-primary)] text-xs uppercase tracking-wider mb-2">// cUSDC</p>
               {formattedDecryptedBalance !== null ? (
-                <p className="text-xl font-bold text-white">
+                <p className="headline text-2xl text-[var(--text-primary)]">
                   {parseFloat(formattedDecryptedBalance).toFixed(2)}
                 </p>
               ) : hasConfidentialBalance ? (
                 <button
                   onClick={handleRevealBalance}
                   disabled={isDecrypting || !fhevmReady}
-                  className="text-lg font-bold text-purple-400 hover:text-purple-300 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  className="text-lg font-mono text-[var(--accent-primary)] hover:underline disabled:opacity-50"
                 >
-                  {isDecrypting ? (
-                    '🔐 Revealing...'
-                  ) : (
-                    <>
-                      🔐 <span className="underline">Click to reveal</span>
-                    </>
-                  )}
+                  {isDecrypting ? 'Revealing...' : 'Click to reveal'}
                 </button>
               ) : (
-                <p className="text-xl font-bold text-white">0.00</p>
+                <p className="headline text-2xl text-[var(--text-primary)]">0.00</p>
               )}
             </div>
           </div>
@@ -211,82 +211,81 @@ export default function CreateConfidentialInvoice() {
 
         {/* No cUSDC Warning */}
         {isConnected && decryptedBalance !== null && cusdcNum !== null && cusdcNum === 0 && (
-          <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-4 mb-6">
-            <p className="text-orange-400 mb-2">
-              ⚠️ You don&apos;t have any cUSDC. You need to wrap USDC first.
+          <div className="p-4 bg-[rgba(229,184,76,0.1)] border border-[var(--status-warning)]/30 mb-8">
+            <p className="text-xs text-[var(--status-warning)] mb-2">
+              You don&apos;t have any cUSDC. You need to wrap USDC first.
             </p>
             <Link
               href="/wrap"
-              className="inline-flex items-center gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+              className="text-xs text-[var(--status-warning)] hover:underline"
             >
-              Go to Wrap Page →
+              Go to Wrap Page {'\u00BB'}
             </Link>
           </div>
         )}
 
         {/* Success Message */}
         {createdInvoiceId && (
-          <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-6 mb-6">
-            <h3 className="text-green-400 font-bold text-lg mb-2">✓ Invoice Created!</h3>
-            <p className="text-gray-300 mb-4">
+          <div className="p-6 bg-[rgba(62,207,178,0.1)] border border-[var(--accent-primary)]/30 mb-8">
+            <p className="text-xs text-[var(--accent-primary)] uppercase tracking-wider mb-2">// Invoice Created</p>
+            <p className="text-[var(--text-secondary)] mb-4">
               Confidential Invoice #{createdInvoiceId} has been created and funded.
             </p>
             <Link
               href={`/confidential/${createdInvoiceId}`}
-              className="inline-flex items-center gap-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 px-4 py-2 rounded-lg transition-colors"
+              className="btn-primary inline-flex"
             >
-              View Invoice →
+              View Invoice {'\u00BB'}
             </Link>
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-gray-800/50 rounded-lg border border-gray-700 p-6 space-y-6">
-          <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
-            <p className="text-sm text-purple-300">
-              🔐 <strong>Privacy Enabled:</strong> The payment amount will be encrypted on-chain. 
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="card-accent p-4">
+            <p className="text-xs text-[var(--accent-primary)]">
+              <span className="text-[var(--text-muted)]">// </span>
+              Privacy Enabled: The payment amount will be encrypted on-chain. 
               Only you, the payee, and the arbiter can decrypt and view it.
             </p>
           </div>
 
-          {/* Must reveal balance first */}
           {decryptedBalance === null && hasConfidentialBalance && (
-            <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
-              <p className="text-yellow-400 text-sm">
-                ⚠️ Please reveal your cUSDC balance first to create an invoice.
+            <div className="p-4 bg-[rgba(229,184,76,0.1)] border border-[var(--status-warning)]/30">
+              <p className="text-xs text-[var(--status-warning)]">
+                Please reveal your cUSDC balance first to create an invoice.
               </p>
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Payee Address
-              <span className="text-gray-500 ml-2">(Who will receive payment)</span>
+            <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              // Payee Address
             </label>
             <input
               type="text"
               value={payee}
               onChange={(e) => setPayee(e.target.value)}
               placeholder="0x..."
-              className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+              className="input-field font-mono"
               required
             />
+            <p className="text-xs text-[var(--text-muted)] mt-2">Who will receive payment</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Arbiter
-              <span className="text-gray-500 ml-2">(Resolves disputes)</span>
+            <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              // Arbiter
             </label>
-            <div className="w-full bg-gray-900/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-400 font-mono text-sm">
+            <div className="input-field bg-[var(--bg-card)] text-[var(--text-muted)] font-mono text-sm">
               {ARBITER_ADDRESS}
             </div>
+            <p className="text-xs text-[var(--text-muted)] mt-2">Resolves disputes</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Amount (cUSDC)
-              <span className="text-purple-400 ml-2">🔐 Will be encrypted</span>
+            <label className="block text-xs text-[var(--accent-primary)] uppercase tracking-wider mb-3">
+              // Amount (cUSDC) <span className="text-[var(--text-muted)]">- Will be encrypted</span>
             </label>
             <input
               type="number"
@@ -295,52 +294,49 @@ export default function CreateConfidentialInvoice() {
               placeholder="100.00"
               step="0.01"
               min="0"
-              className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+              className="input-field"
               required
             />
             {amount && decryptedBalance !== null && !hasEnoughBalance && (
-              <div className="mt-2">
-                <p className="text-sm text-red-400 mb-2">
-                  ⚠️ Insufficient cUSDC. You need {(amountNum - (cusdcNum || 0)).toFixed(2)} more.
+              <div className="mt-3">
+                <p className="text-xs text-[var(--status-error)] mb-2">
+                  Insufficient cUSDC. You need {(amountNum - (cusdcNum || 0)).toFixed(2)} more.
                 </p>
-                <Link
-                  href="/wrap"
-                  className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm"
-                >
-                  Go wrap more USDC →
+                <Link href="/wrap" className="text-xs text-[var(--accent-primary)] hover:underline">
+                  Go wrap more USDC {'\u00BB'}
                 </Link>
               </div>
             )}
             {decryptedBalance !== null && cusdcNum !== null && (
-              <p className="mt-2 text-sm text-gray-400">
+              <p className="mt-2 text-xs text-[var(--text-muted)]">
                 Available: {cusdcNum.toFixed(2)} cUSDC
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Description
+            <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              // Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the work or service..."
               rows={3}
-              className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+              className="input-field resize-none"
             />
           </div>
 
           {/* Status Messages */}
           {isEncrypting && (
-            <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
-              <p className="text-purple-400">🔐 Encrypting amount...</p>
+            <div className="card-accent p-4">
+              <p className="text-xs text-[var(--accent-primary)]">Encrypting amount...</p>
             </div>
           )}
 
           {isCreating && (
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-              <p className="text-blue-400">⏳ Creating and funding invoice...</p>
+            <div className="card-accent p-4">
+              <p className="text-xs text-[var(--status-info)]">Creating and funding invoice...</p>
             </div>
           )}
 
@@ -348,35 +344,37 @@ export default function CreateConfidentialInvoice() {
           <button
             type="submit"
             disabled={!isConnected || isProcessing || !fhevmReady || decryptedBalance === null || !hasEnoughBalance}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-3 px-6 rounded-lg hover:from-purple-600 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="btn-primary w-full justify-center"
           >
             {!isConnected
               ? 'Connect Wallet'
               : !fhevmReady
-              ? '⏳ Waiting for FHEVM...'
+              ? 'Waiting for FHEVM...'
               : decryptedBalance === null
-              ? '🔐 Reveal Balance First'
+              ? 'Reveal Balance First'
               : !hasEnoughBalance
               ? 'Insufficient cUSDC'
               : isEncrypting
-              ? '🔐 Encrypting Amount...'
+              ? 'Encrypting Amount...'
               : isCreating
-              ? '⏳ Creating Invoice...'
-              : 'Create Confidential Invoice'}
+              ? 'Creating Invoice...'
+              : <>Create Confidential Invoice <span>{'\u00BB'}</span></>}
           </button>
         </form>
 
         {/* How it works */}
-        <div className="mt-6 bg-gray-800/30 rounded-lg border border-gray-700/50 p-4">
-          <h4 className="font-bold text-white mb-2">How Confidential Escrow Works:</h4>
-          <ol className="text-sm text-gray-400 space-y-2 list-decimal list-inside">
-            <li>First, wrap USDC to cUSDC on the <Link href="/wrap" className="text-purple-400 hover:underline">Wrap page</Link></li>
-            <li>You (Client) deposit encrypted cUSDC into escrow</li>
-            <li>The amount is hidden from everyone except parties involved</li>
-            <li>Provider completes work and requests payment</li>
-            <li>You approve release or raise dispute</li>
-            <li>If disputed, arbiter decides (they can also decrypt the amount)</li>
-          </ol>
+        <div className="mt-8 card-bracketed p-6">
+          <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-4">
+            // How Confidential Escrow Works
+          </p>
+          <div className="space-y-3 text-sm text-[var(--text-secondary)]">
+            <p><span className="text-[var(--accent-primary)]">01</span> First, wrap USDC to cUSDC on the <Link href="/wrap" className="text-[var(--accent-primary)] hover:underline">Wrap page</Link></p>
+            <p><span className="text-[var(--accent-primary)]">02</span> You (Client) deposit encrypted cUSDC into escrow</p>
+            <p><span className="text-[var(--accent-primary)]">03</span> The amount is hidden from everyone except parties involved</p>
+            <p><span className="text-[var(--accent-primary)]">04</span> Provider completes work and requests payment</p>
+            <p><span className="text-[var(--accent-primary)]">05</span> You approve release or raise dispute</p>
+            <p><span className="text-[var(--accent-primary)]">06</span> If disputed, arbiter decides (they can also decrypt)</p>
+          </div>
         </div>
       </main>
 
