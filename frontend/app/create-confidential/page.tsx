@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
+import { isAddress } from 'viem'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Toast from '@/components/Toast'
-import { ARBITER_ADDRESS } from '@/lib/contracts'
 import { useFhevm, useConfidentialToken, useConfidentialEscrow } from '@/lib/fhevm'
 
 export default function CreateConfidentialInvoice() {
@@ -26,6 +26,7 @@ export default function CreateConfidentialInvoice() {
   const { createAndFundInvoice, isCreating, isEncrypting, error: escrowError } = useConfidentialEscrow()
 
   const [payee, setPayee] = useState('')
+  const [arbiter, setArbiter] = useState('')
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning'; txHash?: string } | null>(null)
@@ -62,8 +63,18 @@ export default function CreateConfidentialInvoice() {
   }
 
   const handleCreate = async () => {
-    if (!payee || !amount) {
+    if (!payee || !arbiter || !amount) {
       setToast({ message: 'Please fill in all fields', type: 'warning' })
+      return
+    }
+
+    if (!isAddress(payee)) {
+      setToast({ message: 'Invalid payee address', type: 'error' })
+      return
+    }
+
+    if (!isAddress(arbiter)) {
+      setToast({ message: 'Invalid arbiter address', type: 'error' })
       return
     }
 
@@ -88,7 +99,7 @@ export default function CreateConfidentialInvoice() {
     try {
       const result = await createAndFundInvoice(
         payee as `0x${string}`,
-        ARBITER_ADDRESS,
+        arbiter as `0x${string}`,
         amount,
         description || ''
       )
@@ -275,12 +286,17 @@ export default function CreateConfidentialInvoice() {
 
           <div>
             <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-3">
-              // Arbiter
+              // Arbiter Address
             </label>
-            <div className="input-field bg-[var(--bg-card)] text-[var(--text-muted)] font-mono text-sm">
-              {ARBITER_ADDRESS}
-            </div>
-            <p className="text-xs text-[var(--text-muted)] mt-2">Resolves disputes</p>
+            <input
+              type="text"
+              value={arbiter}
+              onChange={(e) => setArbiter(e.target.value)}
+              placeholder="0x..."
+              className="input-field font-mono"
+              required
+            />
+            <p className="text-xs text-[var(--text-muted)] mt-2">Resolves disputes if needed</p>
           </div>
 
           <div>

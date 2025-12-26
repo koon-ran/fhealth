@@ -3,15 +3,16 @@
 import { useState, useEffect } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
-import { parseUnits } from 'viem'
+import { parseUnits, isAddress } from 'viem'
 import Link from 'next/link'
-import { CONTRACTS, ARC_ESCROW_ABI, USDC_ABI, ARBITER_ADDRESS } from '@/lib/contracts'
+import { CONTRACTS, ARC_ESCROW_ABI, USDC_ABI } from '@/lib/contracts'
 import Toast from '@/components/Toast'
 
 export default function CreateInvoice() {
   const { address, isConnected } = useAccount()
   const [title, setTitle] = useState('')
   const [payee, setPayee] = useState('')
+  const [arbiter, setArbiter] = useState('')
   const [amount, setAmount] = useState('')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning'; txHash?: string } | null>(null)
   
@@ -34,6 +35,7 @@ export default function CreateInvoice() {
       setTimeout(() => {
         setTitle('')
         setPayee('')
+        setArbiter('')
         setAmount('')
       }, 2000)
     }
@@ -44,6 +46,16 @@ export default function CreateInvoice() {
     
     if (!isConnected || !address) {
       setToast({ message: 'Please connect your wallet', type: 'warning' })
+      return
+    }
+
+    if (!isAddress(payee)) {
+      setToast({ message: 'Invalid payee address', type: 'error' })
+      return
+    }
+
+    if (!isAddress(arbiter)) {
+      setToast({ message: 'Invalid arbiter address', type: 'error' })
       return
     }
 
@@ -65,7 +77,7 @@ export default function CreateInvoice() {
           address: CONTRACTS.ArcEscrow,
           abi: ARC_ESCROW_ABI,
           functionName: 'createAndFundInvoice',
-          args: [address, payee as `0x${string}`, ARBITER_ADDRESS, amountInUsdc, title],
+          args: [address, payee as `0x${string}`, arbiter as `0x${string}`, amountInUsdc, title],
         })
       }, 3000)
       
@@ -177,12 +189,17 @@ export default function CreateInvoice() {
 
           <div>
             <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-3">
-              // Arbiter
+              // Arbiter Address
             </label>
-            <div className="input-field bg-[var(--bg-card)] text-[var(--text-muted)] font-mono text-sm">
-              {ARBITER_ADDRESS}
-            </div>
-            <p className="text-xs text-[var(--text-muted)] mt-2">Designated arbiter for dispute resolution</p>
+            <input
+              type="text"
+              value={arbiter}
+              onChange={(e) => setArbiter(e.target.value)}
+              placeholder="0x..."
+              className="input-field font-mono"
+              required
+            />
+            <p className="text-xs text-[var(--text-muted)] mt-2">Resolves disputes if needed</p>
           </div>
 
           <div>
