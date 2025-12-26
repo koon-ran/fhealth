@@ -73,16 +73,6 @@ FHEscrow/
 - Circle USDC (testnet)
 - Zama fhEVM Coprocessor
 
-## Deployment
-
-### Deployed Contracts (Sepolia)
-
-| Contract | Address |
-|----------|---------|
-| ArcEscrow | `0xec9dfCa2e6DA14EB58a22Cd35d4290b85d650F8F` |
-| ConfidentialEscrow | `0x602055485c2e5B0404db127728a37cC98cbFaC48` |
-| ConfidentialUSDCWrapper | `0x1b8c0e0c4Eef0ffc76C2244459E741F6f67F5827` |
-| USDC | `0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8` |
 
 ## Getting Started
 
@@ -146,7 +136,7 @@ Authorized parties (payer, payee, arbiter) can decrypt confidential amounts by:
 
 ## Security Considerations
 
-- Encrypted amounts are secured by Zama's FHE cryptosystem
+- Encrypted amounts are secured by Zama's FHEVM
 - Only authorized parties can request decryption via the Gateway
 - Smart contracts use OpenZeppelin's audited implementations
 - Dispute resolution requires arbiter intervention
