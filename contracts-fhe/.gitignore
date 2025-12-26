@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+artifacts/
+cache/
+typechain-types/
+types/
+
+# Environment
+.env
+
+# Deployment outputs
+deployments/*/solcInputs/
+
+# Temp files
+fhevmTemp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
