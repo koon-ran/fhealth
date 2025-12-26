@@ -2,7 +2,7 @@
 # Install FHE dependencies for confidential escrow
 
 echo "Installing Zama fhEVM Solidity library..."
-cd /workspaces/fhealth/contract
+cd /workspaces/FHEscrow/contract
 
 # Install fhevm-solidity (Zama's FHE library)
 forge install zama-ai/fhevm-solidity --no-commit

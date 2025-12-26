@@ -21,7 +21,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // Use existing wrapper or deploy new one
   const existingWrapper = process.env.WRAPPER_ADDRESS ?? "";
 
-  console.log(`\n🏥 fHealth Confidential Escrow Deployment`);
+  console.log(`\n🏥 FHEscrow Confidential Escrow Deployment`);
   console.log(`Network: ${network.name}`);
   console.log(`Deployer: ${deployer}`);
 

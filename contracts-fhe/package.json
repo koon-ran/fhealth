@@ -1,6 +1,6 @@
 {
-  "name": "fhealth-fhe-contracts",
-  "description": "FHE-based confidential escrow contracts for fHealth",
+  "name": "FHEscrow-fhe-contracts",
+  "description": "FHE-based confidential escrow contracts for FHEscrow",
   "version": "0.1.0",
   "engines": {
     "node": ">=20",
