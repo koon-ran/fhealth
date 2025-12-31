@@ -2,6 +2,8 @@
 
 A privacy-preserving escrow payment system built on Ethereum using Fully Homomorphic Encryption (FHE). FHEscrow enables confidential escrow transactions where payment amounts remain encrypted on-chain, visible only to authorized parties.
 
+video demo: https://www.loom.com/share/af57f6d8601c4cc7845d5f34afd84b5d
+
 ## Overview
 
 FHEscrow provides two escrow modes:
