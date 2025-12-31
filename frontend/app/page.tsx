@@ -330,7 +330,7 @@ export default function Home() {
               <span className="text-[var(--accent-primary)]">encrypted by default</span>
             </h1>
             <p className="text-lg text-[var(--text-secondary)] max-w-xl mb-8">
-              Privacy-preserving B2B escrow powered by Fully Homomorphic Encryption. 
+              Privacy-preserving escrow powered by Fully Homomorphic Encryption. 
               Payment amounts remain encrypted on-chain, visible only to authorized parties.
             </p>
             <div className="flex flex-wrap gap-4">

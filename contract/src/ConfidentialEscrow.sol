@@ -8,7 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title ConfidentialEscrow
- * @notice Privacy-preserving escrow for B2B payments using FHE-encrypted amounts
+ * @notice Privacy-preserving escrow for payments using FHE-encrypted amounts
  * @dev Implements mutual consent with dispute arbiter model using confidential tokens
  * 
  * Architecture:

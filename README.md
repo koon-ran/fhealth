@@ -1,6 +1,6 @@
 # FHEscrow
 
-A privacy-preserving B2B escrow payment system built on Ethereum using Fully Homomorphic Encryption (FHE). FHEscrow enables confidential escrow transactions where payment amounts remain encrypted on-chain, visible only to authorized parties.
+A privacy-preserving escrow payment system built on Ethereum using Fully Homomorphic Encryption (FHE). FHEscrow enables confidential escrow transactions where payment amounts remain encrypted on-chain, visible only to authorized parties.
 
 ## Overview
 
@@ -24,7 +24,7 @@ FHEscrow/
 
 ### Standard Escrow (Foundry)
 
-**ArcEscrow.sol** - Public escrow contract using USDC
+**Escrow.sol** - Public escrow contract using USDC
 - Payer creates and funds invoice
 - Payee requests payment upon work completion
 - Payer approves release or raises dispute
